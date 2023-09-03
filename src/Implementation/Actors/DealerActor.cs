@@ -35,16 +35,16 @@ namespace Implementation.Actors
             return Task.CompletedTask;
         }
 
-        public Task SendMessageAsync(string command, string text, CancellationToken cancellationToken)
+        public Task SendMessageAsync(Message message, CancellationToken cancellationToken)
         {
             if (_actor is null)
                 throw new InvalidOperationException("Dealer not started");
 
-            NetMQMessage message = new();
-            message.AppendEmptyFrame();
-            message.Append(command);
-            message.Append(text);
-            _bufferBlock.Post(message);
+            NetMQMessage messageToServer = new();
+            messageToServer.AppendEmptyFrame();
+            messageToServer.Append(message.Command);
+            messageToServer.Append(message.Text);
+            _bufferBlock.Post(messageToServer);
             return Task.CompletedTask;
 
         }

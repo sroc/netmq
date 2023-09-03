@@ -3,6 +3,6 @@
     public interface IMessageDealerActor: IMessageClient
     {
         IBroadcastMessage OnMessage { get; }
-        Task SendMessageAsync(string command, string text, CancellationToken cancellationToken);
+        Task SendMessageAsync(Message message, CancellationToken cancellationToken);
     }
 }
