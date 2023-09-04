@@ -1,15 +1,10 @@
 ﻿using Implementation.Interfaces;
 using NetMQ;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace Implementation.Actors
 {
-    public abstract class ActorBase: IMessageActor
+    public abstract class ActorBase: IActor
     {
         protected NetMQActor? _actor;
         protected readonly BufferBlock<NetMQMessage> _bufferBlock;
@@ -28,28 +23,28 @@ namespace Implementation.Actors
         public string HostName { get; private set; } = string.Empty;
         public int Port { get; private set; }
         public string ActorName { get; private set; } = string.Empty;
-        public string Address => $"tcp:{HostName}:{Port}";
+        public string Address => $"tcp://{HostName}:{Port}";
         public string Topic { get; private set; } = string.Empty;
 
-        public IMessageActor AddActorName(string name)
+        public IActor AddActorName(string name)
         {
             ActorName = name;
             return this;
         }
 
-        public IMessageActor AddHostName(string hostName)
+        public IActor AddHostName(string hostName)
         {
             HostName = hostName;
             return this;
         }
 
-        public IMessageActor AddPort(int port)
+        public IActor AddPort(int port)
         {
             Port = port;
             return this;
         }
 
-        public IMessageActor AddTopic(string topic)
+        public IActor AddTopic(string topic)
         {
             Topic = topic;
             return this;

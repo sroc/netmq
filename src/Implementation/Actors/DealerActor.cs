@@ -7,7 +7,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Implementation.Actors
 {
-    public sealed class DealerActor : ActorBase, IMessageDealerActor
+    public sealed class DealerActor : ActorBase, IDealerActor
     {
         public IBroadcastMessage OnMessage { get; init; }
 
@@ -21,7 +21,7 @@ namespace Implementation.Actors
             if (_actor is null)
                 return Task.CompletedTask;
 
-            _actor = NetMQActor.Create(new DealerActorShimHandler(ActorName, Address, OnMessage));
+            _actor = NetMQActor.Create(new DealerActorShimHandler(this));
             return Task.CompletedTask;
         }
 
@@ -59,11 +59,11 @@ namespace Implementation.Actors
         private readonly string _address;
         private readonly string _identity = Guid.NewGuid().ToString();
 
-        public DealerActorShimHandler(string actorName, string address, IBroadcastMessage broadcastMessage)
+        public DealerActorShimHandler(DealerActor dealerActor)
         {
-            _address = address;
-            _actorName = actorName;
-            _broadcastMessage = broadcastMessage;
+            _address = dealerActor.Address;
+            _actorName = dealerActor.ActorName;
+            _broadcastMessage = dealerActor.OnMessage;
         }
 
         public void Run(PairSocket shim)
@@ -78,7 +78,7 @@ namespace Implementation.Actors
                 _dealer.Options.Identity = Encoding.Unicode.GetBytes(_identity);
                 using (_poller = new() { shim, _dealer })
                 {
-                    using (NetMQMonitor monitor = new(_dealer, $"inproc://({_actorName}).inproc", SocketEvents.Connected | SocketEvents.ConnectRetried | SocketEvents.Disconnected))
+                    using (NetMQMonitor monitor = new(_dealer, $"inproc://#{_actorName}#.inproc", SocketEvents.Connected | SocketEvents.ConnectRetried | SocketEvents.Disconnected))
                     {
                         monitor.Connected += Monitor_Connected;
                         monitor.ConnectRetried += Monitor_ConnectRetried;

@@ -7,7 +7,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Implementation.Actors
 {
-    public sealed class RouterActor : ActorBase, IMessageRouterActor
+    internal sealed class RouterActor : ActorBase, IRouterActor
     {
         public RouterActor(IBroadcastMessage broadcastMessage)
         {
@@ -21,7 +21,7 @@ namespace Implementation.Actors
             if(_actor is not null)
                 return Task.CompletedTask;
 
-            _actor = NetMQActor.Create(new RouterActorShimHandler(ActorName, Address, OnMessage));
+            _actor = NetMQActor.Create(new RouterActorShimHandler(this));
             return Task.CompletedTask;
         }
 
@@ -58,12 +58,11 @@ namespace Implementation.Actors
         private readonly string _actorName;
         private readonly HashSet<NetMQFrame> _clients = new();
         private readonly IBroadcastMessage _broadcastMessage;
-
-        public RouterActorShimHandler(string actorName, string address, IBroadcastMessage broadcastMessage)
+        public RouterActorShimHandler(RouterActor routerActor)
         {
-            _address = address;
-            _broadcastMessage = broadcastMessage;
-            _actorName = actorName;
+            _address = routerActor.Address;
+            _broadcastMessage = routerActor.OnMessage;
+            _actorName = routerActor.ActorName;
         }
 
         public void Run(PairSocket shim)
@@ -98,11 +97,11 @@ namespace Implementation.Actors
             }
         }
 
-        private async void Shim_ReceiveReady(object? sender, NetMQSocketEventArgs e)
+        private void Shim_ReceiveReady(object? sender, NetMQSocketEventArgs e)
         {
             try
             {
-                var msg = await e.Socket.ReceiveMultipartMessageAsync();
+                var msg = e.Socket.ReceiveMultipartMessage();
                 if (msg.FrameCount == 3)
                 {
                     foreach (var item in _clients)
