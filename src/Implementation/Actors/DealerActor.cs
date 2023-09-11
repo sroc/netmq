@@ -18,7 +18,7 @@ namespace Implementation.Actors
 
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
-            if (_actor is null)
+            if (_actor is not null)
                 return Task.CompletedTask;
 
             _actor = NetMQActor.Create(new DealerActorShimHandler(this));
